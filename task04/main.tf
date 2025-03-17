@@ -118,6 +118,8 @@ resource "azurerm_linux_virtual_machine" "main" {
   }
   tags = var.tags
 
+  depends_on = [azurerm_public_ip.main]
+
   provisioner "remote-exec" {
     connection {
       type     = "ssh"
