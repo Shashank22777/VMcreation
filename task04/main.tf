@@ -28,7 +28,7 @@ resource "azurerm_subnet" "main" {
 
 # Create Public IP
 resource "azurerm_public_ip" "main" {
-  name                = var.public_ip_name # Parameterized name
+  name                = var.public_ip_name
   location            = var.location
   resource_group_name = azurerm_resource_group.main.name
   allocation_method   = "Dynamic"
@@ -40,14 +40,14 @@ resource "azurerm_public_ip" "main" {
 resource "azurerm_network_security_group" "main" {
   name                = var.nsg_name
   location            = var.location
-  resource_group_name = azurerm_resource_group.main.name
+  resource_group_name = var.resource_group_name
   tags                = var.tags
 }
 
 # HTTP Inbound Rule
 resource "azurerm_network_security_rule" "http" {
   name                        = var.nsg_rule_allow_http
-  resource_group_name         = azurerm_resource_group.main.name
+  resource_group_name         = var.resource_group_name
   network_security_group_name = azurerm_network_security_group.main.name
   priority                    = 100
   direction                   = "Inbound"
@@ -62,7 +62,7 @@ resource "azurerm_network_security_rule" "http" {
 # SSH Inbound Rule
 resource "azurerm_network_security_rule" "ssh" {
   name                        = var.nsg_rule_allow_ssh
-  resource_group_name         = azurerm_resource_group.main.name
+  resource_group_name         = var.resource_group_name
   network_security_group_name = azurerm_network_security_group.main.name
   priority                    = 110
   direction                   = "Inbound"
@@ -78,9 +78,9 @@ resource "azurerm_network_security_rule" "ssh" {
 resource "azurerm_network_interface" "main" {
   name                = var.nic_name
   location            = var.location
-  resource_group_name = azurerm_resource_group.main.name
+  resource_group_name = var.resource_group_name
   ip_configuration {
-    name                          = var.ip_configuration_name # Parameterized IP config name
+    name                          = var.ip_configuration_name
     subnet_id                     = azurerm_subnet.main.id
     private_ip_address_allocation = "Dynamic"
     public_ip_address_id          = azurerm_public_ip.main.id
@@ -88,22 +88,16 @@ resource "azurerm_network_interface" "main" {
   tags = var.tags
 }
 
-# Associate NIC with NSG
+# Associate Network Interface with NSG
 resource "azurerm_network_interface_security_group_association" "main" {
   network_interface_id      = azurerm_network_interface.main.id
   network_security_group_id = azurerm_network_security_group.main.id
 }
 
-# Data block to retrieve the Public IP address
-data "azurerm_public_ip" "main" {
-  name                = var.public_ip_name
-  resource_group_name = var.resource_group_name
-}
-
 # Create Virtual Machine
 resource "azurerm_linux_virtual_machine" "main" {
   name                            = var.vm_name
-  resource_group_name             = azurerm_resource_group.main.name
+  resource_group_name             = var.resource_group_name
   location                        = var.location
   size                            = var.vm_sku
   admin_username                  = "azureuser"
@@ -111,7 +105,7 @@ resource "azurerm_linux_virtual_machine" "main" {
   disable_password_authentication = false
 
   network_interface_ids = [
-    azurerm_network_interface.main.id,
+    azurerm_network_interface.main.id
   ]
 
   os_disk {
@@ -122,21 +116,16 @@ resource "azurerm_linux_virtual_machine" "main" {
   source_image_reference {
     publisher = "canonical"
     offer     = "0001-com-ubuntu-server-jammy"
-    sku       = "22_04-lts"
+    sku       = var.vm_os_version
     version   = "latest"
   }
 
   tags = var.tags
 
-  depends_on = [
-    azurerm_public_ip.main,
-    azurerm_network_interface_security_group_association.main
-  ]
-
   provisioner "remote-exec" {
     connection {
       type     = "ssh"
-      host     = data.azurerm_public_ip.main.ip_address
+      host     = azurerm_public_ip.main.ip_address   # Directly reference the public IP
       user     = "azureuser"
       password = var.vm_password
     }
@@ -145,18 +134,18 @@ resource "azurerm_linux_virtual_machine" "main" {
   }
 }
 
-# Null resource to wait for SSH
+# Null resource to wait for SSH availability (optional)
 resource "null_resource" "wait_for_ssh" {
   provisioner "remote-exec" {
     connection {
       type     = "ssh"
-      host     = data.azurerm_public_ip.main.ip_address
+      host     = azurerm_public_ip.main.ip_address
       user     = "azureuser"
       password = var.vm_password
     }
 
     inline = [
-      "echo Waiting for SSH to be available...",
+      "echo Waiting for SSH to become available...",
       "sleep 10"
     ]
   }
