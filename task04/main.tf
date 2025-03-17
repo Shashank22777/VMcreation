@@ -119,7 +119,7 @@ resource "azurerm_linux_virtual_machine" "main" {
   source_image_reference {
     publisher = "canonical"
     offer     = "0001-com-ubuntu-server-jammy"
-    sku       = var.vm_os_version
+    sku       = "24_04-lts"
     version   = "latest"
   }
 
