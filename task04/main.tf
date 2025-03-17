@@ -96,12 +96,13 @@ resource "azurerm_network_interface_security_group_association" "main" {
 
 # Create Virtual Machine
 resource "azurerm_linux_virtual_machine" "main" {
-  name                = var.vm_name
-  resource_group_name = azurerm_resource_group.main.name
-  location            = var.location
-  size                = var.vm_sku
-  admin_username      = "azureuser"
-  admin_password      = var.vm_password
+  name                            = var.vm_name
+  resource_group_name             = azurerm_resource_group.main.name
+  location                        = var.location
+  size                            = var.vm_sku
+  admin_username                  = "azureuser"
+  admin_password                  = var.vm_password
+  disable_password_authentication = false
   network_interface_ids = [
     azurerm_network_interface.main.id,
   ]
