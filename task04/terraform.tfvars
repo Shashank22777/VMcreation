@@ -8,7 +8,7 @@ pip_name            = "cmaz-7850b25e-mod4-pip"
 dns_name_label      = "cmaz-7850b25e-mod4-nginx"
 vm_name             = "cmaz-7850b25e-mod4-vm"
 vm_sku              = "Standard_F2s_v2"
-vm_os_version       = "ubuntu-24_04-lts"
+vm_os_version       = "24_04-lts"
 tags                = { Creator = "bandari_shashank@epam.com" }
 nsg_rule_allow_http = "AllowHTTP"
 nsg_rule_allow_ssh  = "AllowSSH"
