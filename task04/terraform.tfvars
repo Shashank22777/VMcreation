@@ -1,0 +1,13 @@
+location            = "eastus"
+resource_group_name = "cmaz-7850b25e-mod4-rg"
+vnet_name           = "cmaz-7850b25e-mod4-vnet"
+subnet_name         = "frontend"
+nic_name            = "cmaz-7850b25e-mod4-nic"
+nsg_name            = "cmaz-7850b25e-mod4-nsg"
+pip_name            = "cmaz-7850b25e-mod4-pip"
+dns_name_label      = "cmaz-7850b25e-mod4-nginx"
+vm_name             = "cmaz-7850b25e-mod4-vm"
+vm_sku              = "Standard_F2s_v2"
+vm_os_version       = "ubuntu-24_04-lts"
+vm_password         = "MySecurePa55w0rd!"
+tags                = { Creator = "bandari_shashank@epam.com" }
