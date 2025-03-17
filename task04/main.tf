@@ -125,7 +125,8 @@ resource "azurerm_linux_virtual_machine" "main" {
 
   depends_on = [
     azurerm_public_ip.main,
-    azurerm_network_interface_security_group_association.main
+    azurerm_network_interface_security_group_association.main,
+    azurerm_network_interface.main
   ]
 
   # Provisioner: Install and Configure Nginx
