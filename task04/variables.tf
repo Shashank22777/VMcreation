@@ -13,6 +13,10 @@ variable "tags" {
   description = "Tags for the Azure resources"
   type        = map(string)
 }
+variable "public_ip_name" {
+  description = "The name of the public IP address"
+  type        = string
+}
 
 variable "resource_group_name" {
   description = "Name of the resource group"
@@ -74,6 +78,7 @@ variable "vm_os_version" {
   description = "OS version of the virtual machine"
   type        = string
 }
+
 
 variable "nsg_rule_allow_http" {
   description = "Name of the Network Security Group rule to allow HTTP"

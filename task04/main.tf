@@ -28,7 +28,7 @@ resource "azurerm_subnet" "main" {
 
 # Create Public IP
 resource "azurerm_public_ip" "main" {
-  name                = var.pip_name
+  name                = var.public_ip_name # Parameterized name
   location            = var.location
   resource_group_name = azurerm_resource_group.main.name
   allocation_method   = "Dynamic"
@@ -80,7 +80,7 @@ resource "azurerm_network_interface" "main" {
   location            = var.location
   resource_group_name = azurerm_resource_group.main.name
   ip_configuration {
-    name                          = var.ip_configuration_name
+    name                          = var.ip_configuration_name # Parameterized IP config name
     subnet_id                     = azurerm_subnet.main.id
     private_ip_address_allocation = "Dynamic"
     public_ip_address_id          = azurerm_public_ip.main.id
@@ -93,9 +93,10 @@ resource "azurerm_network_interface_security_group_association" "main" {
   network_interface_id      = azurerm_network_interface.main.id
   network_security_group_id = azurerm_network_security_group.main.id
 }
-# Data block to wait for the public IP
+
+# Data block to retrieve the Public IP address
 data "azurerm_public_ip" "main" {
-  name                = azurerm_public_ip.main.name
+  name                = var.public_ip_name
   resource_group_name = var.resource_group_name
 }
 
