@@ -122,6 +122,11 @@ resource "azurerm_linux_virtual_machine" "main" {
 
   tags = var.tags
 
+  depends_on = [
+    azurerm_public_ip.main,
+    azurerm_network_interface_security_group_association.main
+  ]
+
   provisioner "remote-exec" {
     connection {
       type     = "ssh"
@@ -134,21 +139,3 @@ resource "azurerm_linux_virtual_machine" "main" {
   }
 }
 
-# Null resource to wait for SSH availability (optional)
-resource "null_resource" "wait_for_ssh" {
-  provisioner "remote-exec" {
-    connection {
-      type     = "ssh"
-      host     = azurerm_public_ip.main.ip_address
-      user     = "azureuser"
-      password = var.vm_password
-    }
-
-    inline = [
-      "echo Waiting for SSH to become available...",
-      "sleep 10"
-    ]
-  }
-
-  depends_on = [azurerm_linux_virtual_machine.main]
-}
