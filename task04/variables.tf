@@ -28,6 +28,17 @@ variable "subnet_name" {
   description = "Name of the Subnet"
   type        = string
 }
+variable "vnet_address_space" {
+  description = "The address space for the Virtual Network"
+  type        = list(string)
+  default     = ["10.0.0.0/16"] # Default value for the VNet's address space
+}
+
+variable "subnet_address_prefixes" {
+  description = "The address prefixes for the Subnet"
+  type        = list(string)
+  default     = ["10.0.1.0/24"] # Default value for the Subnet's address prefixes
+}
 
 variable "nic_name" {
   description = "Name of the network interface"
