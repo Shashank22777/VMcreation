@@ -76,11 +76,42 @@ variable "vm_os_version" {
 }
 
 variable "nsg_rule_allow_http" {
-  description = "Name for the Network Security Group rule to allow HTTP"
+  description = "Name of the Network Security Group rule to allow HTTP"
   type        = string
+  default     = "AllowHTTP"
 }
 
 variable "nsg_rule_allow_ssh" {
-  description = "Name for the Network Security Group rule to allow SSH"
+  description = "Name of the Network Security Group rule to allow SSH"
   type        = string
+  default     = "AllowSSH"
+}
+
+variable "os_disk_caching" {
+  description = "Caching value for the OS Disk"
+  type        = string
+  default     = "ReadWrite"
+}
+
+variable "os_disk_storage_account_type" {
+  description = "Storage account type for the OS Disk (e.g., 'Standard_LRS')"
+  type        = string
+  default     = "Standard_LRS"
+}
+
+variable "ip_configuration_name" {
+  description = "Name of the IP configuration for the NIC"
+  type        = string
+  default     = "internal"
+}
+
+variable "nginx_commands" {
+  description = "Commands for installing and starting the NGINX service"
+  type        = list(string)
+  default = [
+    "sudo apt-get update",
+    "sudo apt-get install -y nginx",
+    "sudo systemctl start nginx",
+    "sudo systemctl enable nginx"
+  ]
 }

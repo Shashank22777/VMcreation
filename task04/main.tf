@@ -13,7 +13,7 @@ resource "azurerm_resource_group" "main" {
 resource "azurerm_virtual_network" "main" {
   name                = var.vnet_name
   resource_group_name = azurerm_resource_group.main.name
-  location            = azurerm_resource_group.main.location
+  location            = var.location
   address_space       = var.vnet_address_space
   tags                = var.tags
 }
@@ -29,7 +29,7 @@ resource "azurerm_subnet" "main" {
 # Create Public IP
 resource "azurerm_public_ip" "main" {
   name                = var.pip_name
-  location            = azurerm_resource_group.main.location
+  location            = var.location
   resource_group_name = azurerm_resource_group.main.name
   allocation_method   = "Dynamic"
   domain_name_label   = var.dns_name_label
@@ -39,26 +39,12 @@ resource "azurerm_public_ip" "main" {
 # Create Network Security Group
 resource "azurerm_network_security_group" "main" {
   name                = var.nsg_name
-  location            = azurerm_resource_group.main.location
+  location            = var.location
   resource_group_name = azurerm_resource_group.main.name
   tags                = var.tags
 }
 
 # HTTP Inbound Rule
-resource "azurerm_network_security_rule" "http" {
-  name                        = "AllowHTTP"
-  resource_group_name         = azurerm_resource_group.main.name
-  network_security_group_name = azurerm_network_security_group.main.name
-  priority                    = 100
-  direction                   = "Inbound"
-  access                      = "Allow"
-  protocol                    = "Tcp"
-  source_port_range           = "*"
-  destination_port_ranges     = ["80"]
-  source_address_prefix       = "*"
-  destination_address_prefix  = "*"
-}
-
 resource "azurerm_network_security_rule" "http" {
   name                        = var.nsg_rule_allow_http
   resource_group_name         = azurerm_resource_group.main.name
@@ -73,6 +59,7 @@ resource "azurerm_network_security_rule" "http" {
   destination_address_prefix  = "*"
 }
 
+# SSH Inbound Rule
 resource "azurerm_network_security_rule" "ssh" {
   name                        = var.nsg_rule_allow_ssh
   resource_group_name         = azurerm_resource_group.main.name
@@ -90,10 +77,10 @@ resource "azurerm_network_security_rule" "ssh" {
 # Create Network Interface
 resource "azurerm_network_interface" "main" {
   name                = var.nic_name
-  location            = azurerm_resource_group.main.location
+  location            = var.location
   resource_group_name = azurerm_resource_group.main.name
   ip_configuration {
-    name                          = "internal"
+    name                          = var.ip_configuration_name
     subnet_id                     = azurerm_subnet.main.id
     private_ip_address_allocation = "Dynamic"
     public_ip_address_id          = azurerm_public_ip.main.id
@@ -111,7 +98,7 @@ resource "azurerm_network_interface_security_group_association" "main" {
 resource "azurerm_linux_virtual_machine" "main" {
   name                = var.vm_name
   resource_group_name = azurerm_resource_group.main.name
-  location            = azurerm_resource_group.main.location
+  location            = var.location
   size                = var.vm_sku
   admin_username      = "azureuser"
   admin_password      = var.vm_password
@@ -119,8 +106,8 @@ resource "azurerm_linux_virtual_machine" "main" {
     azurerm_network_interface.main.id,
   ]
   os_disk {
-    caching              = "ReadWrite"
-    storage_account_type = "Standard_LRS"
+    caching              = var.os_disk_caching
+    storage_account_type = var.os_disk_storage_account_type
   }
   source_image_reference {
     publisher = "canonical"
@@ -138,11 +125,6 @@ resource "azurerm_linux_virtual_machine" "main" {
       password = var.vm_password
     }
 
-    inline = [
-      "sudo apt-get update",
-      "sudo apt-get install -y nginx",
-      "sudo systemctl start nginx",
-      "sudo systemctl enable nginx",
-    ]
+    inline = var.nginx_commands
   }
 }
