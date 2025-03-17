@@ -1,15 +1,16 @@
+# Provider Configuration
 provider "azurerm" {
   features {}
 }
 
-# Create Resource Group
+# Resource Group
 resource "azurerm_resource_group" "main" {
   name     = var.resource_group_name
   location = var.location
   tags     = var.tags
 }
 
-# Create Virtual Network
+# Virtual Network
 resource "azurerm_virtual_network" "main" {
   name                = var.vnet_name
   resource_group_name = azurerm_resource_group.main.name
@@ -18,7 +19,7 @@ resource "azurerm_virtual_network" "main" {
   tags                = var.tags
 }
 
-# Create Subnet
+# Subnet
 resource "azurerm_subnet" "main" {
   name                 = var.subnet_name
   resource_group_name  = azurerm_resource_group.main.name
@@ -26,7 +27,7 @@ resource "azurerm_subnet" "main" {
   address_prefixes     = var.subnet_address_prefixes
 }
 
-# Create Public IP
+# Public IP
 resource "azurerm_public_ip" "main" {
   name                = var.public_ip_name
   location            = var.location
@@ -36,18 +37,20 @@ resource "azurerm_public_ip" "main" {
   tags                = var.tags
 }
 
-# Create Network Security Group
+# Network Security Group
 resource "azurerm_network_security_group" "main" {
   name                = var.nsg_name
   location            = var.location
-  resource_group_name = var.resource_group_name
+  resource_group_name = azurerm_resource_group.main.name
   tags                = var.tags
+
+  depends_on = [azurerm_resource_group.main]
 }
 
-# HTTP Inbound Rule
+# Network Security Rule for HTTP
 resource "azurerm_network_security_rule" "http" {
   name                        = var.nsg_rule_allow_http
-  resource_group_name         = var.resource_group_name
+  resource_group_name         = azurerm_resource_group.main.name
   network_security_group_name = azurerm_network_security_group.main.name
   priority                    = 100
   direction                   = "Inbound"
@@ -59,10 +62,10 @@ resource "azurerm_network_security_rule" "http" {
   destination_address_prefix  = "*"
 }
 
-# SSH Inbound Rule
+# Network Security Rule for SSH
 resource "azurerm_network_security_rule" "ssh" {
   name                        = var.nsg_rule_allow_ssh
-  resource_group_name         = var.resource_group_name
+  resource_group_name         = azurerm_resource_group.main.name
   network_security_group_name = azurerm_network_security_group.main.name
   priority                    = 110
   direction                   = "Inbound"
@@ -74,11 +77,11 @@ resource "azurerm_network_security_rule" "ssh" {
   destination_address_prefix  = "*"
 }
 
-# Create Network Interface
+# Network Interface
 resource "azurerm_network_interface" "main" {
   name                = var.nic_name
   location            = var.location
-  resource_group_name = var.resource_group_name
+  resource_group_name = azurerm_resource_group.main.name
   ip_configuration {
     name                          = var.ip_configuration_name
     subnet_id                     = azurerm_subnet.main.id
@@ -88,16 +91,16 @@ resource "azurerm_network_interface" "main" {
   tags = var.tags
 }
 
-# Associate Network Interface with NSG
+# Associate NIC with NSG
 resource "azurerm_network_interface_security_group_association" "main" {
   network_interface_id      = azurerm_network_interface.main.id
   network_security_group_id = azurerm_network_security_group.main.id
 }
 
-# Create Virtual Machine
+# Linux Virtual Machine
 resource "azurerm_linux_virtual_machine" "main" {
   name                            = var.vm_name
-  resource_group_name             = var.resource_group_name
+  resource_group_name             = azurerm_resource_group.main.name
   location                        = var.location
   size                            = var.vm_sku
   admin_username                  = "azureuser"
@@ -105,7 +108,7 @@ resource "azurerm_linux_virtual_machine" "main" {
   disable_password_authentication = false
 
   network_interface_ids = [
-    azurerm_network_interface.main.id
+    azurerm_network_interface.main.id,
   ]
 
   os_disk {
@@ -124,13 +127,14 @@ resource "azurerm_linux_virtual_machine" "main" {
 
   depends_on = [
     azurerm_public_ip.main,
-    azurerm_network_interface_security_group_association.main
+    azurerm_network_interface_security_group_association.main,
   ]
 
+  # Provisioner: Install and Configure Nginx
   provisioner "remote-exec" {
     connection {
       type     = "ssh"
-      host     = azurerm_public_ip.main.ip_address # Directly reference the public IP
+      host     = azurerm_public_ip.main.ip_address
       user     = "azureuser"
       password = var.vm_password
     }
@@ -138,4 +142,3 @@ resource "azurerm_linux_virtual_machine" "main" {
     inline = var.nginx_commands
   }
 }
-
