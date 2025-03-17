@@ -93,6 +93,11 @@ resource "azurerm_network_interface_security_group_association" "main" {
   network_interface_id      = azurerm_network_interface.main.id
   network_security_group_id = azurerm_network_security_group.main.id
 }
+# Data block to wait for the public IP
+data "azurerm_public_ip" "main" {
+  name                = azurerm_public_ip.main.name
+  resource_group_name = var.resource_group_name
+}
 
 # Create Virtual Machine
 resource "azurerm_linux_virtual_machine" "main" {
@@ -103,31 +108,57 @@ resource "azurerm_linux_virtual_machine" "main" {
   admin_username                  = "azureuser"
   admin_password                  = var.vm_password
   disable_password_authentication = false
+
   network_interface_ids = [
     azurerm_network_interface.main.id,
   ]
+
   os_disk {
     caching              = var.os_disk_caching
     storage_account_type = var.os_disk_storage_account_type
   }
+
   source_image_reference {
     publisher = "canonical"
     offer     = "0001-com-ubuntu-server-jammy"
     sku       = "22_04-lts"
     version   = "latest"
   }
+
   tags = var.tags
 
-  depends_on = [azurerm_public_ip.main]
+  depends_on = [
+    azurerm_public_ip.main,
+    azurerm_network_interface_security_group_association.main
+  ]
 
   provisioner "remote-exec" {
     connection {
       type     = "ssh"
-      host     = azurerm_public_ip.main.ip_address
+      host     = data.azurerm_public_ip.main.ip_address
       user     = "azureuser"
       password = var.vm_password
     }
 
     inline = var.nginx_commands
   }
+}
+
+# Null resource to wait for SSH
+resource "null_resource" "wait_for_ssh" {
+  provisioner "remote-exec" {
+    connection {
+      type     = "ssh"
+      host     = data.azurerm_public_ip.main.ip_address
+      user     = "azureuser"
+      password = var.vm_password
+    }
+
+    inline = [
+      "echo Waiting for SSH to be available...",
+      "sleep 10"
+    ]
+  }
+
+  depends_on = [azurerm_linux_virtual_machine.main]
 }
