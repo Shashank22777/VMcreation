@@ -132,10 +132,9 @@ resource "azurerm_linux_virtual_machine" "main" {
   provisioner "remote-exec" {
     connection {
       type     = "ssh"
-      host     = azurerm_public_ip.main.ip_address
+      host     = self.public_ip_address
       user     = "azureuser"
       password = var.vm_password
-      timeout  = "5m" # Wait up to 5 minutes for the connection
     }
 
     inline = var.nginx_commands
