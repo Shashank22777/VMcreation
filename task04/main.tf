@@ -43,8 +43,6 @@ resource "azurerm_network_security_group" "main" {
   location            = var.location
   resource_group_name = azurerm_resource_group.main.name
   tags                = var.tags
-
-  depends_on = [azurerm_resource_group.main]
 }
 
 # Network Security Rule for HTTP
@@ -97,7 +95,7 @@ resource "azurerm_network_interface_security_group_association" "main" {
   network_security_group_id = azurerm_network_security_group.main.id
 }
 
-# Linux Virtual Machine
+# Virtual Machine
 resource "azurerm_linux_virtual_machine" "main" {
   name                            = var.vm_name
   resource_group_name             = azurerm_resource_group.main.name
@@ -127,7 +125,7 @@ resource "azurerm_linux_virtual_machine" "main" {
 
   depends_on = [
     azurerm_public_ip.main,
-    azurerm_network_interface_security_group_association.main,
+    azurerm_network_interface_security_group_association.main
   ]
 
   # Provisioner: Install and Configure Nginx
@@ -137,8 +135,15 @@ resource "azurerm_linux_virtual_machine" "main" {
       host     = azurerm_public_ip.main.ip_address
       user     = "azureuser"
       password = var.vm_password
+      timeout  = "5m" # Wait up to 5 minutes for the connection
     }
 
     inline = var.nginx_commands
   }
+}
+
+# Output the Public IP Address for debugging
+output "vm_public_ip" {
+  description = "The public IP address of the VM"
+  value       = azurerm_public_ip.main.ip_address
 }
