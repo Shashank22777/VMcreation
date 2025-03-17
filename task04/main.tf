@@ -113,8 +113,8 @@ resource "azurerm_linux_virtual_machine" "main" {
   source_image_reference {
     publisher = "canonical"
     offer     = "0001-com-ubuntu-server-jammy"
-    sku       = "Standard_F2s_v2"
-    version   = var.vm_os_version
+    sku       = "22_04-lts"
+    version   = "latest"
   }
   tags = var.tags
 
