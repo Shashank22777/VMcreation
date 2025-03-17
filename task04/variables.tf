@@ -63,3 +63,13 @@ variable "vm_os_version" {
   description = "OS version of the virtual machine"
   type        = string
 }
+
+variable "nsg_rule_allow_http" {
+  description = "Name for the Network Security Group rule to allow HTTP"
+  type        = string
+}
+
+variable "nsg_rule_allow_ssh" {
+  description = "Name for the Network Security Group rule to allow SSH"
+  type        = string
+}

@@ -59,9 +59,22 @@ resource "azurerm_network_security_rule" "http" {
   destination_address_prefix  = "*"
 }
 
-# SSH Inbound Rule
+resource "azurerm_network_security_rule" "http" {
+  name                        = var.nsg_rule_allow_http
+  resource_group_name         = azurerm_resource_group.main.name
+  network_security_group_name = azurerm_network_security_group.main.name
+  priority                    = 100
+  direction                   = "Inbound"
+  access                      = "Allow"
+  protocol                    = "Tcp"
+  source_port_range           = "*"
+  destination_port_ranges     = ["80"]
+  source_address_prefix       = "*"
+  destination_address_prefix  = "*"
+}
+
 resource "azurerm_network_security_rule" "ssh" {
-  name                        = "AllowSSH"
+  name                        = var.nsg_rule_allow_ssh
   resource_group_name         = azurerm_resource_group.main.name
   network_security_group_name = azurerm_network_security_group.main.name
   priority                    = 110
